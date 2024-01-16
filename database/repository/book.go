@@ -17,6 +17,7 @@ type IBookRepository interface {
 	GetBookById(bookId int64) (model.Book, error)
 	AddBook(book model.Book) error
 	DeleteBookById(bookId int64) error
+	UpdateBookPages(bookId int64, newPages int32) error
 }
 
 type BookRepository struct {
@@ -37,7 +38,7 @@ func (bookRepository *BookRepository) GetAllBooks() []model.Book {
 		return []model.Book{}
 	}
 
-	return bookRepository.parseBook(bookRows)
+	return parseBook(bookRows)
 }
 
 func (bookRepository *BookRepository) GetBooksByAuthor(authorName string) []model.Book {
@@ -50,7 +51,7 @@ func (bookRepository *BookRepository) GetBooksByAuthor(authorName string) []mode
 		return []model.Book{}
 	}
 
-	return bookRepository.parseBook(bookRows)
+	return parseBook(bookRows)
 }
 
 func (bookRepository *BookRepository) GetBookById(bookId int64) (model.Book, error) {
@@ -66,7 +67,8 @@ func (bookRepository *BookRepository) GetBookById(bookId int64) (model.Book, err
 	scanErr := queryRow.Scan(&id, &name, &pages, &author)
 
 	if scanErr != nil {
-		return model.Book{}, errors.New(fmt.Sprintf("Error while getting book with id %v", bookId))
+		errMsg := fmt.Sprintf("Error while getting book with id %v", bookId)
+		return model.Book{}, errors.New(errMsg)
 	}
 
 	return model.Book{
@@ -87,7 +89,7 @@ func (bookRepository *BookRepository) AddBook(newBook model.Book) error {
 		return err
 	}
 
-	log.Info(fmt.Printf("Book added with %v", addNewBook))
+	log.Info(fmt.Sprintf("Book added with %v", addNewBook))
 
 	return nil
 }
@@ -113,7 +115,29 @@ func (bookRepository *BookRepository) DeleteBookById(bookId int64) error {
 	return nil
 }
 
-func (bookRepository *BookRepository) parseBook(rows pgx.Rows) []model.Book {
+func (bookRepository *BookRepository) UpdateBookPages(bookId int64, newPages int32) error {
+	ctx := context.Background()
+
+	_, getErr := bookRepository.GetBookById(bookId)
+	if getErr != nil {
+		return errors.New("book not found")
+	}
+
+	query := `Update books set pages = $1 where id = $2`
+
+	_, err := bookRepository.dbPool.Exec(ctx, query, newPages, bookId)
+	if err != nil {
+		errMsg := fmt.Sprintf("error while updating book pages with id %v", bookId)
+		return errors.New(errMsg)
+	}
+
+	message := fmt.Sprintf("Book %v pages updated with %v", bookId, newPages)
+	log.Info(message)
+
+	return nil
+}
+
+func parseBook(rows pgx.Rows) []model.Book {
 	var books = []model.Book{}
 	var id int64
 	var pages int32

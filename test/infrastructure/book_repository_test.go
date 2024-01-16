@@ -150,3 +150,21 @@ func TestDeleteById(t *testing.T) {
 	})
 	clear(ctx, dbPool)
 }
+
+func TestUpdateBookPages(t *testing.T) {
+	setup(ctx, dbPool)
+	t.Run("UpdateBookPages", func(t *testing.T) {
+		var bookId int64 = 1
+		var newPages int32 = 100
+
+		beforeUpdateGetBook, _ := bookRepository.GetBookById(bookId)
+
+		bookRepository.UpdateBookPages(bookId, newPages)
+
+		afterUpdateGetBook, _ := bookRepository.GetBookById(bookId)
+
+		assert.Equal(t, newPages, afterUpdateGetBook.Pages)
+		assert.NotEqual(t, beforeUpdateGetBook.Pages, afterUpdateGetBook.Pages)
+	})
+	clear(ctx, dbPool)
+}
