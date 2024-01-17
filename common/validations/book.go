@@ -1,11 +1,11 @@
 package validations
 
 import (
-	"book-app-go/database/model"
+	"book-app-go/service/dto"
 	"errors"
 )
 
-func ValidateBook(book model.Book) error {
+func ValidateBookCreate(book dto.BookCreate) error {
 	if book.Name == "" {
 		return errors.New("book name cannot be empty")
 	}

@@ -97,11 +97,6 @@ func (bookRepository *BookRepository) AddBook(newBook model.Book) error {
 func (bookRepository *BookRepository) DeleteBookById(bookId int64) error {
 	ctx := context.Background()
 
-	_, getErr := bookRepository.GetBookById(bookId)
-	if getErr != nil {
-		return errors.New("book not found")
-	}
-
 	query := `Delete from books where id = $1`
 
 	_, err := bookRepository.dbPool.Exec(ctx, query, bookId)
@@ -117,11 +112,6 @@ func (bookRepository *BookRepository) DeleteBookById(bookId int64) error {
 
 func (bookRepository *BookRepository) UpdateBookPages(bookId int64, newPages int32) error {
 	ctx := context.Background()
-
-	_, getErr := bookRepository.GetBookById(bookId)
-	if getErr != nil {
-		return errors.New("book not found")
-	}
 
 	query := `Update books set pages = $1 where id = $2`
 
